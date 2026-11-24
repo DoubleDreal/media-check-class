@@ -25,6 +25,7 @@ const CLASS_CODE = '1234';            // ← 수업 코드로 바꾸세요
 const CAPTURE_FOLDER = '매체사용_캡처';
 const MAX_IMG_CHARS = 3500000;        // 사진(base64) 최대 길이(약 2.5MB)
 
+const WHO_H = ['학년','반','이름'];   // 모든 탭(피드백 제외)의 맨 오른쪽에 붙는 열
 const DEF = {
   pre:   { name: 'R_사전', headers: ['타임스탬프','코드번호','평일 예상','주말 예상','가장 많이 쓰는 매체','주로 하는 것','잠자기 직전 사용','나의 사용 평가(1~5)','조절 경험','조절 방법','알아보고 싶은 것','기록 방법'] },
   daily: { name: 'R_일일', headers: ['타임스탬프','코드번호','날짜','총 사용(분)','영상 보기(분)','게임(분)','메신저·SNS(분)','공부·검색(분)','기타(분)','기분','계획보다 오래','잠자기 30분 전','딴 앱도 열었나','한 줄 소감','스크린타임 캡처'] },
@@ -33,6 +34,7 @@ const DEF = {
   post:  { name: 'R_사후', headers: ['타임스탬프','코드번호','평일 사용 시간','주말 사용 시간','잠자기 직전 사용','나의 사용 평가(1~5)','목표 지킨 정도(1~5)','도움이 된 방법','어려웠던 점','새로 알게 된 점','이어 갈 목표'] },
   fb:    { name: 'R_피드백', headers: ['타임스탬프','발표자 코드','잘한 점','궁금한 점·질문','가져올 방법'] }
 };
+['pre','daily','goal','act','post'].forEach(function (k) { DEF[k].headers = DEF[k].headers.concat(WHO_H); });
 
 /* ───────── 설치용 ───────── */
 function setupSheets() {
@@ -74,18 +76,20 @@ function doPost(e) {
     const tz = ss.getSpreadsheetTimeZone();
     const now = new Date();
     let saved = 0;
+    const who = [s_(body.grade).slice(0, 4), s_(body.klass).slice(0, 4), s_(body.name).slice(0, 20)];
+    if (type !== 'fb') ensureHeader_(sh, DEF[type].headers);
 
     if (type === 'pre') {
       const d = body.data || {};
-      upsert_(sh, [1], [now, Number(code), s_(d.wk), s_(d.we), s_(d.media), s_(d.purp), s_(d.sleep), n_(d.rate), s_(d.tried), s_(d.how), s_(d.want), s_(d.method)], tz);
+      upsert_(sh, [1], [now, Number(code), s_(d.wk), s_(d.we), s_(d.media), s_(d.purp), s_(d.sleep), n_(d.rate), s_(d.tried), s_(d.how), s_(d.want), s_(d.method)].concat(who), tz);
       saved = 1;
     } else if (type === 'goal') {
       const d = body.data || {};
-      upsert_(sh, [1], [now, Number(code), s_(d.analysis), s_(d.cmp), s_(d.fix), s_(d.goal), s_(d.hard), s_(d.ifthen), s_(d.alt), s_(d.help), s_(d.days), n_(d.conf)], tz);
+      upsert_(sh, [1], [now, Number(code), s_(d.analysis), s_(d.cmp), s_(d.fix), s_(d.goal), s_(d.hard), s_(d.ifthen), s_(d.alt), s_(d.help), s_(d.days), n_(d.conf)].concat(who), tz);
       saved = 1;
     } else if (type === 'post') {
       const d = body.data || {};
-      upsert_(sh, [1], [now, Number(code), s_(d.wk), s_(d.we), s_(d.sleep), n_(d.rate), n_(d.goalScore), s_(d.helped), s_(d.hard), s_(d.learned), s_(d.next)], tz);
+      upsert_(sh, [1], [now, Number(code), s_(d.wk), s_(d.we), s_(d.sleep), n_(d.rate), n_(d.goalScore), s_(d.helped), s_(d.hard), s_(d.learned), s_(d.next)].concat(who), tz);
       saved = 1;
     } else if (type === 'fb') {
       const d = body.data || {};
@@ -102,10 +106,10 @@ function doPost(e) {
         let img = '';
         if (r.img && r.img.data && String(r.img.data).length <= MAX_IMG_CHARS) img = saveImage_(r.img, nm + (type === 'act' ? '_실천' : ''));
         if (type === 'daily') {
-          const row = [now, Number(code), date, m_(r.total), m_(r.v), m_(r.g), m_(r.m), m_(r.s), m_(r.e), s_(r.mood), s_(r.over), s_(r.sleep), s_(r.app), s_(r.note), img];
+          const row = [now, Number(code), date, m_(r.total), m_(r.v), m_(r.g), m_(r.m), m_(r.s), m_(r.e), s_(r.mood), s_(r.over), s_(r.sleep), s_(r.app), s_(r.note), img].concat(who);
           upsert_(sh, [1, 2], row, tz, 14, img);
         } else {
-          const row = [now, Number(code), date, s_(r.ok), m_(r.t), s_(r.help), s_(r.hard), s_(r.change), img];
+          const row = [now, Number(code), date, s_(r.ok), m_(r.t), s_(r.help), s_(r.hard), s_(r.change), img].concat(who);
           upsert_(sh, [1, 2], row, tz, 8, img);
         }
         saved++;
@@ -120,6 +124,11 @@ function doPost(e) {
 }
 
 /* ───────── 도우미 ───────── */
+function ensureHeader_(sh, headers) {
+  if (sh.getRange(1, headers.length).getValue() === '') {
+    sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold').setBackground('#1F5C7A').setFontColor('#FFFFFF');
+  }
+}
 function out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 function s_(v) { return v == null ? '' : String(v).replace(/^[=+\-@]/, "'$&").slice(0, 600); }   // 수식 입력 방지 + 길이 제한
 function n_(v) { const x = parseFloat(v); return isFinite(x) ? x : ''; }
