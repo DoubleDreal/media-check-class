@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>나의 매체 사용 습관 점검 도구 (공유용)</title>
+<style>
+:root{--ink:#1d2a33;--mut:#5d6b75;--line:#d5dde2;--bg:#f5f8fa;--pri:#1f5c7a;--pri2:#e3f0f6;--ok:#2e7d5b;--warn:#b86a00;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;color:var(--ink);background:var(--bg);line-height:1.55}
+header{background:var(--pri);color:#fff;padding:18px 20px}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;font-size:14px;opacity:.92}
+nav{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav button{border:1px solid var(--line);background:#fff;padding:8px 14px;border-radius:20px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+nav button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+main{max-width:980px;margin:0 auto;padding:16px}
+section{display:none}
+section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 6px;font-size:19px;color:var(--pri)}
+h3{margin:14px 0 6px;font-size:16px}
+.hint{color:var(--mut);font-size:14px;margin:2px 0 10px}
+label{display:block;font-weight:600;margin:10px 0 4px;font-size:15px}
+input,select,textarea{font:inherit;font-size:15px;padding:7px 9px;border:1px solid #b9c5cc;border-radius:8px;background:#fff;color:var(--ink);max-width:100%}
+textarea{width:100%;min-height:64px}
+input[type=number]{width:84px}
+input[type=text]{width:130px}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;background:#fff}
+th,td{border:1px solid var(--line);padding:5px 6px;text-align:center}
+th{background:var(--pri2);font-weight:700}
+td.d{white-space:nowrap;text-align:left;font-weight:600}
+td input[type=number]{width:70px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.stat{background:var(--pri2);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-size:24px;color:var(--pri)}
+.stat span{font-size:13px;color:var(--mut)}
+.say{background:#fff9e6;border:1px solid #f0dd9a;border-radius:10px;padding:10px 12px;margin:8px 0;font-size:15px}
+.hints li{margin:3px 0}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.btn{border:0;background:var(--pri);color:#fff;padding:9px 16px;border-radius:8px;font:inherit;font-size:15px;cursor:pointer}
+.btn.sec{background:#fff;color:var(--pri);border:1px solid var(--pri)}
+.btn.danger{background:#fff;color:#a33;border:1px solid #d9a0a0}
+.nextb{display:flex;justify-content:space-between;margin-top:6px}
+.note{font-size:13px;color:var(--mut)}
+.chk label{display:inline-block;font-weight:400;margin:4px 12px 4px 0}
+.chk input{margin-right:4px}
+svg text{font-family:inherit}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d2a33;color:#fff;padding:9px 16px;border-radius:8px;font-size:14px;display:none;z-index:9}
+.srv{max-width:980px;margin:10px auto 0;padding:0 16px;font-size:14px}
+.srv span{display:inline-block;padding:4px 10px;border-radius:14px;background:#eef3f5;color:var(--mut)}
+.srv span.ok{background:#e2f3ea;color:var(--ok)}.srv span.bad{background:#fdeaea;color:#a33}
+.sent{font-size:14px;color:var(--ok);align-self:center}.sent.bad{color:#a33}
+.cap{cursor:pointer;color:var(--pri);font-size:13px;white-space:nowrap}.cap input{display:none}
+@media print{
+ nav,.btns,.nextb,header p,#toast,.srv{display:none!important}
+ section{display:block!important;page-break-inside:avoid}
+ body{background:#fff}.card{border:1px solid #999;break-inside:avoid}
+ header{background:#fff;color:#000;padding:0 0 8px}
+}
+</style>
+</head>
+<body>
+<header>
+ <h1>나의 매체 사용 습관 점검 도구</h1>
+ <p>로그인이 필요 없어요 · 학년, 반, 번호, 이름을 쓰고 시작해요 · 내용은 [제출]을 누른 것만 선생님께 가요</p>
+</header>
+<nav id="nav"></nav>
+<div class="srv" id="srv"></div>
+<main>
+
+<section id="s1">
+ <div class="card">
+  <h2>① 점검하기 : 시작하기</h2>
+  <div class="row">
+   <div><label for="grade">학년</label><input id="grade" data-s type="text" inputmode="numeric" maxlength="2" style="width:64px"></div>
+   <div><label for="klass">반</label><input id="klass" data-s type="text" inputmode="numeric" maxlength="2" style="width:64px"></div>
+   <div><label for="code">번호</label><input id="code" data-s type="text" inputmode="numeric" maxlength="6" style="width:72px"></div>
+   <div><label for="sname">이름</label><input id="sname" data-s type="text" maxlength="12" style="width:120px"></div>
+   <div><label for="cls">수업 코드 (선생님이 알려 줘요)</label><input id="cls" data-s type="text" maxlength="12" style="width:140px"></div>
+   <div><label for="start">기록 시작일</label><input id="start" data-s type="date"></div>
+  </div>
+ </div>
+ <div class="card">
+  <h2>사전 설문</h2>
+  <p class="hint">정답은 없어요. 지금 내 생각을 솔직하게 답해요.</p>
+  <div class="row">
+   <div><label for="expW">평일 하루, 얼마나 쓸 것 같나요? (예상)</label><select id="expW" data-s></select></div>
+   <div><label for="expE">주말 하루는? (예상)</label><select id="expE" data-s></select></div>
+  </div>
+  <label>가장 많이 쓰는 매체 (모두 선택)</label><div class="chk" id="preMedia"></div>
+  <label>주로 하는 것 (모두 선택)</label><div class="chk" id="prePurp"></div>
+  <div class="row">
+   <div><label for="preSleep">잠자기 직전(30분 안)에도 쓰나요?</label><select id="preSleep" data-s></select></div>
+   <div><label for="preRate">내 매체 사용은 지금 어떤가요?<br><span class="note">1 = 아주 알맞게 쓴다 · 3 = 보통이다 · 5 = 너무 많이 쓴다</span></label><select id="preRate" data-s></select></div>
+   <div><label for="preTried">스스로 조절해 본 적이 있나요?</label><select id="preTried" data-s></select></div>
+   <div><label for="preMethod">기록은 어떻게 할까요?</label><select id="preMethod" data-s></select></div>
+  </div>
+  <label for="preHow">조절해 본 적이 있다면 어떻게 했나요?</label>
+  <textarea id="preHow" data-s style="min-height:44px"></textarea>
+  <label for="preWant">이번 점검에서 특히 알아보고 싶은 것</label>
+  <input id="preWant" data-s type="text" style="width:100%">
+  <div class="btns"><button class="btn" data-send="pre">사전 설문 제출</button><span class="sent" id="sent_pre"></span></div>
+ </div>
+ <div class="card">
+  <h2>일주일 기록</h2>
+  <p class="hint">하루가 끝난 저녁에 한 번만 입력해요. 기기의 '스크린 타임'을 보고 <b>분 단위</b>로 써요. (1시간 30분 = 90) 잘 모르면 비워 둬도 돼요.</p>
+  <div class="tw"><table id="recT"></table></div>
+  <p class="note">· '총 사용'을 비워 두면 목적별 시간을 더한 값으로 계산해요. · 기록하려고 폰을 열었다가 다른 앱을 열었다면 '딴 앱' 칸에 솔직하게 표시해요. · 📷는 스크린 타임 화면 사진이에요. (선택)</p>
+  <div class="btns"><button class="btn" data-send="daily">기록 제출 (입력한 날 모두)</button><span class="sent" id="sent_daily"></span></div>
+  <p class="note">같은 날을 다시 제출하면 앞의 내용이 새 내용으로 바뀌어요.</p>
+  <div class="nextb"><span></span><button class="btn" data-go="2">다음: 분석하기 →</button></div>
+ </div>
+</section>
+
+<section id="s2">
+ <div class="card">
+  <h2>② 분석하기 : 내 기록은 무엇을 말해 줄까요?</h2>
+  <div class="cards" id="stats"></div>
+  <div class="say" id="cmpSay"></div>
+  <h3>하루 총 사용 시간 (분)</h3>
+  <div id="chDay"></div>
+  <h3>목적별로 나누어 보기</h3>
+  <div id="chPur"></div>
+  <h3>습관과 기분</h3>
+  <div id="habits"></div>
+  <h3>그래프에서 찾을 수 있는 것 (참고)</h3>
+  <ul class="hints" id="hints"></ul>
+ </div>
+ <div class="card">
+  <h3>분석문 쓰기</h3>
+  <p class="hint">그래프의 <b>숫자를 근거</b>로 넣어 써요.</p>
+  <label for="a1">내 기록을 보니 ( ① )를 알 수 있다. 그 근거는 ( ② )이다.</label>
+  <textarea id="a1" data-s placeholder="예: 내 기록을 보니 영상 보기가 가장 많다는 것을 알 수 있다. 그 근거는 전체의 40%라는 점이다."></textarea>
+  <label for="a2">또한 ( ① )도 알 수 있다. 그 근거는 ( ② )이다.</label>
+  <textarea id="a2" data-s></textarea>
+  <label for="a3">이를 통해 내가 고치고 싶은 점은 ( )이다.</label>
+  <textarea id="a3" data-s></textarea>
+  <div class="nextb"><button class="btn sec" data-go="1">← 기록으로</button><button class="btn" data-go="3">다음: 목표 세우기 →</button></div>
+ </div>
+</section>
+
+<section id="s3">
+ <div class="card">
+  <h2>③ 계획 세우기</h2>
+  <p class="hint">구체적일수록 지키기 쉬워요. '게임 줄이기'보다 <b>'평일 저녁 식사 후 게임은 30분 안에서 끝낸다'</b>처럼 써요.</p>
+  <label for="p1">가장 고치고 싶은 점</label>
+  <select id="p1" data-s>
+   <option value="">선택하세요</option><option>전체 사용 시간</option><option>잠자기 전 사용</option><option>사용 목적 바꾸기</option><option>사용 시간대</option><option>쓰고 난 뒤 기분</option><option>기타</option>
+  </select>
+  <label for="p2">나의 목표 (언제 · 어디서 · 얼마나)</label>
+  <textarea id="p2" data-s></textarea>
+  <label for="p3">목표를 지키기 어렵게 만드는 것은?</label>
+  <textarea id="p3" data-s></textarea>
+  <label for="p4">만약 ( ) 하면, ( ) 한다.</label>
+  <textarea id="p4" data-s placeholder="예: 만약 영상이 자꾸 보고 싶어지면, 먼저 물 한 잔을 마시고 10분 뒤에 다시 생각한다."></textarea>
+  <label>매체 대신 할 수 있는 활동</label>
+  <div class="chk" id="alt"></div>
+  <label for="p5">나를 도와줄 사람과 도움 요청 방법</label>
+  <textarea id="p5" data-s></textarea>
+  <div class="row">
+   <div><label for="p6">실천 기간</label><select id="p6" data-s><option>7일</option><option>10일</option><option selected>14일</option></select></div>
+   <div><label for="p7">지킬 수 있다는 자신감 (1~5)<br><span class="note">1 = 자신 없다 · 3 = 보통이다 · 5 = 자신 있다</span></label><select id="p7" data-s><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
+   <div><label for="pstart">실천 시작일</label><input id="pstart" data-s type="date"></div>
+  </div>
+  <div class="btns"><button class="btn" data-send="goal">목표·계획 제출 (분석문 포함)</button><span class="sent" id="sent_goal"></span></div>
+  <div class="nextb"><button class="btn sec" data-go="2">← 분석으로</button><button class="btn" data-go="4">다음: 실천하기 →</button></div>
+ </div>
+</section>
+
+<section id="s4">
+ <div class="card">
+  <h2>④ 실천하기 : 실천 기록</h2>
+  <p class="hint">나의 목표: <b id="goalShow">(③에서 목표를 쓰면 여기에 나와요)</b></p>
+  <p class="hint">목표를 지켰으면 지켰다, 반쯤이면 반쯤 지켰다, 못 지킨 날도 솔직하게 써요. 못 지킨 날의 이유가 가장 좋은 자료예요.</p>
+  <div class="tw"><table id="actT"></table></div>
+  <div class="btns"><button class="btn" data-send="act">실천 기록 제출 (입력한 날 모두)</button><span class="sent" id="sent_act"></span></div>
+  <p class="note">실천 시작일은 ③ 계획 화면에 있어요. 날짜를 넣어야 제출할 수 있어요.</p>
+  <div class="nextb"><button class="btn sec" data-go="3">← 계획으로</button><button class="btn" data-go="5">다음: 결과 정리 →</button></div>
+ </div>
+</section>
+
+<section id="s5">
+ <div class="card">
+  <h2>⑤ 결과 정리와 공유</h2>
+  <div class="cards" id="rStats"></div>
+  <div class="say" id="rSay"></div>
+  <div id="chRes"></div>
+ </div>
+ <div class="card">
+  <h3>결과 보고문 쓰기 (목표 → 실천 → 결과 → 알게 된 점)</h3>
+  <label for="r1">목표: 나는 ( )를 목표로 세웠다. 그 이유는 ( )였다.</label><textarea id="r1" data-s></textarea>
+  <label for="r2">실천: ( )일 동안 ( )하며 실천했다. 어려울 때는 ( )했다.</label><textarea id="r2" data-s></textarea>
+  <label for="r3">결과: 실천 전보다 ( )가 ( ) 달라졌다. (숫자 근거)</label><textarea id="r3" data-s></textarea>
+  <label for="r4">알게 된 점: 이 활동을 하면서 ( )를 알게 되었다.</label><textarea id="r4" data-s></textarea>
+  <label for="r5">앞으로: ( )할 것이다.</label><textarea id="r5" data-s></textarea>
+ </div>
+ <div class="card">
+  <h3>사후 설문 (보고문의 '알게 된 점'과 '앞으로'도 함께 제출돼요)</h3>
+  <div class="row">
+   <div><label for="poW">평일 하루 사용 시간은?</label><select id="poW" data-s></select></div>
+   <div><label for="poE">주말 하루는?</label><select id="poE" data-s></select></div>
+   <div><label for="poSleep">잠자기 직전에도 쓰나요?</label><select id="poSleep" data-s></select></div>
+   <div><label for="poRate">내 매체 사용은 지금 어떤가요?<br><span class="note">1 = 아주 알맞게 쓴다 · 3 = 보통이다 · 5 = 너무 많이 쓴다</span></label><select id="poRate" data-s></select></div>
+   <div><label for="poGoal">내 목표를 얼마나 지켰나요?<br><span class="note">1 = 거의 못 지켰다 · 3 = 반쯤 지켰다 · 5 = 아주 잘 지켰다</span></label><select id="poGoal" data-s></select></div>
+  </div>
+  <label for="poHelp">가장 도움이 된 방법</label><textarea id="poHelp" data-s style="min-height:44px"></textarea>
+  <label for="poHard">가장 어려웠던 점</label><textarea id="poHard" data-s style="min-height:44px"></textarea>
+  <div class="btns"><button class="btn" data-send="post">사후 설문 제출</button><span class="sent" id="sent_post"></span></div>
+ </div>
+ <div class="card">
+  <h3>친구 발표 피드백 보내기</h3>
+  <p class="hint">비교하거나 평가하지 말고, 배울 점을 써요.</p>
+  <div class="row"><div><label for="fbCode">발표한 친구 번호</label><input id="fbCode" type="text" inputmode="numeric" maxlength="6" style="width:90px"></div></div>
+  <label for="fbGood">잘한 점</label><input id="fbGood" type="text" style="width:100%">
+  <label for="fbQ">궁금한 점이나 질문</label><input id="fbQ" type="text" style="width:100%">
+  <label for="fbBring">내 생활에 가져와 볼 만한 방법</label><input id="fbBring" type="text" style="width:100%">
+  <div class="btns"><button class="btn" data-send="fb">피드백 보내기</button><span class="sent" id="sent_fb"></span></div>
+ </div>
+ <div class="card">
+  <h3>저장하고 나누기</h3>
+  <div class="btns">
+   <button class="btn" id="bPrint">인쇄 · PDF로 저장</button>
+   <button class="btn sec" id="bSave">내 기록 파일로 저장</button>
+   <button class="btn sec" id="bLoad">저장한 파일 불러오기</button>
+   <button class="btn sec" id="bCopy">발표용 요약 복사</button>
+   <button class="btn danger" id="bClear">모두 지우기</button>
+  </div>
+  <input type="file" id="fLoad" accept=".json,application/json" style="display:none">
+  <p class="note">· 선생님께는 [제출]을 누른 내용만 가요. 같은 기기·같은 브라우저에서는 쓰는 내용이 자동으로 저장돼요. 다른 기기로 옮기거나 학교 공용 기기를 쓸 때는 '내 기록 파일로 저장'을 눌러 파일을 보관하세요.<br>· 인쇄 창에서 '대상: PDF로 저장'을 고르면 선생님께 낼 수 있어요.</p>
+  <div class="nextb"><button class="btn sec" data-go="4">← 실천으로</button><span></span></div>
+ </div>
+</section>
+</main>
+<div id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+/* ★ 선생님 설정: 수집 서버(Apps Script 웹 앱) 주소를 따옴표 안에 붙여넣으세요. 비워 두면 제출 기능이 꺼집니다. */
+var ENDPOINT="";
+var KEY="mediaHabitTool.v2", DAYS=7, PRAC=14, caps={};
+var PM=["스마트폰","태블릿","TV","게임기","컴퓨터","기타"], PP=["영상 보기","게임","메신저·SNS","공부·검색","음악","웹툰·책","기타"];
+var SLEEP=["거의 매일","자주","가끔","거의 안 함"],R5=["1","2","3","4","5"];
+var CH=[["1시간 미만",30],["1~2시간",90],["2~3시간",150],["3~4시간",210],["4시간 이상",270]];
+var CATS=[["v","영상 보기"],["g","게임"],["m","메신저·SNS"],["s","공부·검색"],["e","기타"]];
+var ALT=["운동·산책","책 읽기","그림·만들기","가족·친구와 놀기","악기·취미","기타"];
+var S={}, mem={};
+function $(i){return document.getElementById(i);}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function load(){try{S=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){S=mem||{};} if(!S||typeof S!=="object")S={};}
+function save(){mem=S;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function toast(t){var el=$("toast");el.textContent=t;el.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){el.style.display="none";},2200);}
+
+/* ---------- build inputs ---------- */
+function opts(list,blank){var h=blank?'<option value="">선택</option>':"";list.forEach(function(x){h+="<option>"+esc(x)+"</option>";});return h;}
+function build(){
+ var h="";
+ ["expW","expE","poW","poE"].forEach(function(id){$(id).innerHTML=opts(CH.map(function(c){return c[0];}),true);});
+ ["preSleep","poSleep"].forEach(function(id){$(id).innerHTML=opts(SLEEP,true);});
+ ["preRate","poRate"].forEach(function(id){$(id).innerHTML=opts(R5,true);});
+ $("poGoal").innerHTML=opts(R5,true);
+ $("preTried").innerHTML=opts(["있다","없다"],true);
+ $("preMethod").innerHTML=opts(["종이 기록표","이 점검 도구"],true);
+ var cm="";PM.forEach(function(x,k){cm+='<label><input type="checkbox" data-s id="pm'+k+'">'+esc(x)+"</label>";});$("preMedia").innerHTML=cm;
+ var cp="";PP.forEach(function(x,k){cp+='<label><input type="checkbox" data-s id="pp'+k+'">'+esc(x)+"</label>";});$("prePurp").innerHTML=cp;
+ var t='<tr><th>날짜</th><th>총 사용(분)</th>';
+ CATS.forEach(function(c){t+="<th>"+c[1]+"(분)</th>";});
+ t+="<th>기분</th><th>계획보다 오래</th><th>잠자기 30분 전</th><th>딴 앱도 열었나</th><th>한 줄 메모</th><th>스크린타임 사진</th></tr>";
+ for(var i=0;i<DAYS;i++){
+  t+='<tr><td class="d" id="rd'+i+'"></td><td><input data-s type="number" min="0" max="1440" inputmode="numeric" id="r'+i+'_t"></td>';
+  CATS.forEach(function(c){t+='<td><input data-s type="number" min="0" max="1440" inputmode="numeric" id="r'+i+"_"+c[0]+'"></td>';});
+  t+='<td><select data-s id="r'+i+'_mood">'+opts(["좋았다","그저 그랬다","아쉬웠다"],true)+"</select></td>";
+  t+='<td><select data-s id="r'+i+'_over">'+opts(["그렇다","아니다","계획이 없었다"],true)+"</select></td>";
+  t+='<td><select data-s id="r'+i+'_sleep">'+opts(["예","아니요"],true)+"</select></td>";
+  t+='<td><select data-s id="r'+i+'_app">'+opts(["예","아니요"],true)+"</select></td>";
+  t+='<td><input data-s type="text" style="width:140px" id="r'+i+'_note"></td>';
+  t+='<td><label class="cap"><input type="file" accept="image/*" data-cap="r'+i+'"><span id="cp_r'+i+'">📷 선택</span></label></td></tr>';
+ }
+ $("recT").innerHTML=t;
+ var a='<tr><th>날짜</th><th>목표 지켰나</th><th>사용 시간(분)</th><th>도움이 된 것</th><th>어려웠던 것</th><th>계획 수정</th><th>스크린타임 사진</th></tr>';
+ for(i=0;i<PRAC;i++){
+  a+='<tr><td class="d" id="ad'+i+'"></td><td><select data-s id="a'+i+'_ok">'+opts(["지켰다","반쯤 지켰다","못 지켰다"],true)+"</select></td>";
+  a+='<td><input data-s type="number" min="0" max="1440" inputmode="numeric" id="a'+i+'_t"></td>';
+  a+='<td><input data-s type="text" style="width:150px" id="a'+i+'_h"></td><td><input data-s type="text" style="width:150px" id="a'+i+'_d"></td>';
+  a+='<td><select data-s id="a'+i+'_chg">'+opts(["아니요","조금 바꾸고 싶다","많이 바꾸고 싶다"],true)+"</select></td>";
+  a+='<td><label class="cap"><input type="file" accept="image/*" data-cap="a'+i+'"><span id="cp_a'+i+'">📷 선택</span></label></td></tr>';
+ }
+ $("actT").innerHTML=a;
+ var c="";ALT.forEach(function(x,k){c+='<label><input type="checkbox" data-s id="alt'+k+'">'+esc(x)+"</label>";});
+ $("alt").innerHTML=c;
+ var n="";[["1","① 기록"],["2","② 분석"],["3","③ 계획"],["4","④ 실천"],["5","⑤ 결과"]].forEach(function(x){n+='<button data-go="'+x[0]+'">'+x[1]+"</button>";});
+ $("nav").innerHTML=n;
+}
+function restore(){
+ document.querySelectorAll("[data-s]").forEach(function(el){
+  var v=S[el.id];if(v===undefined)return;
+  if(el.type==="checkbox")el.checked=!!v;else el.value=v;
+ });
+ if(!$("start").value)$("start").value=(function(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());})(new Date());
+}
+function collect(){
+ document.querySelectorAll("[data-s]").forEach(function(el){S[el.id]=el.type==="checkbox"?el.checked:el.value;});
+ save();
+}
+
+/* ---------- helpers ---------- */
+function g(id){var e=$(id);return e?e.value:"";}
+function num(v){if(v===""||v==null)return null;var n=parseFloat(v);return isFinite(n)&&n>=0?n:null;}
+function pdate(s){if(!s)return null;var p=s.split("-");if(p.length!==3)return null;return new Date(+p[0],+p[1]-1,+p[2]);}
+function addD(d,n){if(!d)return null;return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);}
+function fmt(d){return d?(d.getMonth()+1)+"/"+d.getDate()+"("+"일월화수목금토".charAt(d.getDay())+")":"";}
+function isWE(d){return d&&(d.getDay()===0||d.getDay()===6);}
+function mean(a){a=a.filter(function(x){return x!==null;});return a.length?a.reduce(function(s,x){return s+x;},0)/a.length:null;}
+function r0(x){return x===null?null:Math.round(x);}
+function exp(id){var v=g(id);for(var i=0;i<CH.length;i++)if(CH[i][0]===v)return CH[i][1];return null;}
+function hm(m){if(m===null)return "-";m=Math.round(m);if(m<60)return m+"분";return Math.floor(m/60)+"시간"+(m%60?" "+m%60+"분":"");}
+
+function recs(){
+ var st=pdate(g("start")),out=[];
+ for(var i=0;i<DAYS;i++){
+  var cats=CATS.map(function(c){return num(g("r"+i+"_"+c[0]));});
+  var any=cats.some(function(x){return x!==null;});
+  var sum=cats.reduce(function(s,x){return s+(x||0);},0);
+  var t=num(g("r"+i+"_t"));
+  out.push({i:i,date:addD(st,i),cats:cats,total:t!==null?t:(any?sum:null),mood:g("r"+i+"_mood"),over:g("r"+i+"_over"),sleep:g("r"+i+"_sleep"),app:g("r"+i+"_app")});
+ }
+ return out;
+}
+function pracs(){
+ var st=pdate(g("pstart")),out=[];
+ for(var i=0;i<PRAC;i++){
+  var ok=g("a"+i+"_ok");
+  out.push({i:i,date:addD(st,i),ok:ok,score:ok==="지켰다"?1:ok==="반쯤 지켰다"?0.5:ok==="못 지켰다"?0:null,t:num(g("a"+i+"_t"))});
+ }
+ return out;
+}
+
+/* ---------- charts ---------- */
+function barSvg(labels,vals,unit){
+ var W=620,H=230,pl=44,pb=34,pt=16,n=labels.length,max=0;
+ vals.forEach(function(v){if(v!==null&&v>max)max=v;});
+ if(max===0)max=60;max=Math.ceil(max*1.1/40)*40;
+ var bw=(W-pl-10)/n,s='<svg viewBox="0 0 '+W+" "+H+'" width="100%" role="img">';
+ for(var k=0;k<=4;k++){var y=pt+(H-pt-pb)*(1-k/4);s+='<line x1="'+pl+'" x2="'+(W-6)+'" y1="'+y+'" y2="'+y+'" stroke="#e1e7ea"/><text x="'+(pl-6)+'" y="'+(y+4)+'" font-size="11" text-anchor="end" fill="#5d6b75">'+Math.round(max*k/4)+"</text>";}
+ vals.forEach(function(v,i){
+  var x=pl+i*bw+bw*0.2,w=bw*0.6;
+  if(v!==null){var h=(H-pt-pb)*v/max;s+='<rect x="'+x+'" y="'+(H-pb-h)+'" width="'+w+'" height="'+h+'" rx="4" fill="#1f5c7a"/><text x="'+(x+w/2)+'" y="'+(H-pb-h-4)+'" font-size="12" text-anchor="middle" fill="#1d2a33">'+Math.round(v)+"</text>";}
+  else s+='<text x="'+(x+w/2)+'" y="'+(H-pb-6)+'" font-size="11" text-anchor="middle" fill="#9aa7af">-</text>';
+  s+='<text x="'+(x+w/2)+'" y="'+(H-12)+'" font-size="12" text-anchor="middle" fill="#1d2a33">'+esc(labels[i])+"</text>";
+ });
+ return s+'<text x="6" y="12" font-size="11" fill="#5d6b75">'+esc(unit||"")+"</text></svg>";
+}
+function hbars(items){
+ var tot=items.reduce(function(s,x){return s+x.v;},0);
+ if(!tot)return '<p class="note">목적별 시간을 입력하면 여기에 나와요.</p>';
+ var mx=Math.max.apply(null,items.map(function(x){return x.v;})),h="";
+ items.forEach(function(x){var p=Math.round(x.v/tot*100);h+='<div style="display:flex;align-items:center;gap:8px;margin:5px 0"><span style="width:92px;font-size:14px">'+esc(x.l)+'</span><div style="flex:1;background:#eef3f5;border-radius:6px"><div style="width:'+(mx?x.v/mx*100:0)+'%;background:#2e7d5b;height:20px;border-radius:6px;min-width:'+(x.v?3:0)+'px"></div></div><span style="width:110px;font-size:14px">'+x.v+"분 ("+p+"%)</span></div>";});
+ return h;
+}
+
+/* ---------- analysis ---------- */
+function cmpText(label,e,a){
+ if(e===null||a===null)return null;
+ var d=a>e*1.2?"예상보다 많았어요":a<e*0.8?"예상보다 적었어요":"예상과 비슷했어요";
+ return label+": 예상 "+hm(e)+" / 실제 평균 "+hm(a)+" → "+d;
+}
+function render(){
+ var R=recs(),P=pracs();
+ R.forEach(function(r,i){$("rd"+i).textContent=r.date?fmt(r.date):(i+1)+"일째";});
+ P.forEach(function(r,i){$("ad"+i).textContent=(i+1)+"일째"+(r.date?" · "+fmt(r.date):"");});
+ /* 2 */
+ var wd=mean(R.filter(function(r){return r.date&&!isWE(r.date);}).map(function(r){return r.total;}));
+ var we=mean(R.filter(function(r){return r.date&&isWE(r.date);}).map(function(r){return r.total;}));
+ var all=mean(R.map(function(r){return r.total;}));
+ var cards=[["하루 평균",hm(all),"기록한 날 기준"],["평일 평균",hm(wd),"예상: "+(exp("expW")===null?"-":hm(exp("expW")))],["주말 평균",hm(we),"예상: "+(exp("expE")===null?"-":hm(exp("expE")))]];
+ var h="";cards.forEach(function(c){h+='<div class="stat"><b>'+esc(c[1])+"</b><span>"+esc(c[0])+" · "+esc(c[2])+"</span></div>";});
+ $("stats").innerHTML=h;
+ var s1=cmpText("평일",exp("expW"),wd),s2=cmpText("주말",exp("expE"),we);
+ $("cmpSay").innerHTML=(s1||s2)?"예상과 실제 비교<br>"+[s1,s2].filter(Boolean).map(esc).join("<br>"):"예상 시간(①)과 기록을 입력하면 비교 결과가 나와요.";
+ $("chDay").innerHTML=barSvg(R.map(function(r,i){return r.date?(r.date.getMonth()+1)+"/"+r.date.getDate():(i+1)+"일";}),R.map(function(r){return r.total;}),"분");
+ var tot=CATS.map(function(c,k){var s=0;R.forEach(function(r){s+=r.cats[k]||0;});return {l:c[1],v:s};});
+ $("chPur").innerHTML=hbars(tot);
+ var cnt=function(f,v){return R.filter(function(r){return r[f]===v;}).length;};
+ $("habits").innerHTML='<div class="cards">'+[["잠자기 30분 전에도 쓴 날",cnt("sleep","예")],["계획보다 오래 쓴 날",cnt("over","그렇다")],["기록하다 딴 앱도 연 날",cnt("app","예")],["기분 '좋았다'",cnt("mood","좋았다")],["기분 '그저 그랬다'",cnt("mood","그저 그랬다")],["기분 '아쉬웠다'",cnt("mood","아쉬웠다")]].map(function(x){return '<div class="stat"><b>'+x[1]+"일</b><span>"+esc(x[0])+"</span></div>";}).join("")+"</div>";
+ var hs=[],best=null;R.forEach(function(r){if(r.total!==null&&(!best||r.total>best.total))best=r;});
+ if(best)hs.push("사용 시간이 가장 긴 날은 "+(best.date?fmt(best.date):(best.i+1)+"일째")+"로 "+hm(best.total)+"이에요. 그날은 무슨 일이 있었나요?");
+ var tt=tot.reduce(function(s,x){return s+x.v;},0);
+ if(tt){var top=tot.slice().sort(function(a,b){return b.v-a.v;})[0];hs.push("가장 많이 쓴 목적은 '"+top.l+"'이고 전체의 "+Math.round(top.v/tt*100)+"%예요.");
+  var st=tot[3];hs.push("공부·검색은 전체의 "+Math.round(st.v/tt*100)+"%예요.");}
+ if(cnt("mood","아쉬웠다"))hs.push("사용하고 나서 '아쉬웠다'고 느낀 날이 "+cnt("mood","아쉬웠다")+"일 있어요. 어떤 날이었는지 떠올려 봐요.");
+ if(cnt("app","예"))hs.push("기록하려다 딴 앱을 연 날이 "+cnt("app","예")+"일 있어요. 그때 어떤 생각이 들었나요?");
+ $("hints").innerHTML=hs.length?hs.map(function(x){return "<li>"+esc(x)+"</li>";}).join(""):"<li>기록을 입력하면 참고 문장이 나와요.</li>";
+ /* 4 */
+ $("goalShow").textContent=g("p2").trim()||"(③에서 목표를 쓰면 여기에 나와요)";
+ /* 5 */
+ var pa=mean(P.map(function(p){return p.t;})),sc=mean(P.map(function(p){return p.score;}));
+ var ch=(pa!==null&&all!==null)?pa-all:null;
+ var rc=[["기록한 주 평균",hm(all)],["실천 기간 평균",hm(pa)],["변화",ch===null?"-":(ch<0?"▼ ":ch>0?"▲ ":"")+hm(Math.abs(ch))],["목표 지킨 정도",sc===null?"-":Math.round(sc*100)+"%"]];
+ $("rStats").innerHTML=rc.map(function(x){return '<div class="stat"><b>'+esc(x[1])+"</b><span>"+esc(x[0])+"</span></div>";}).join("");
+ $("rSay").innerHTML=ch===null?"기록(①)과 실천 기록(④)을 입력하면 변화가 나와요.":ch<0?"기록한 주보다 하루 평균 <b>"+hm(-ch)+"</b> 줄었어요.":ch>0?"기록한 주보다 하루 평균 <b>"+hm(ch)+"</b> 늘었어요. 왜 그랬는지 생각해 봐요. 이것도 좋은 발견이에요.":"기록한 주와 같았어요.";
+ $("chRes").innerHTML=barSvg(["기록한 주 평균","실천 기간 평균"],[r0(all),r0(pa)],"분");
+}
+function summary(){
+ var R=recs(),P=pracs(),all=mean(R.map(function(r){return r.total;})),pa=mean(P.map(function(p){return p.t;})),sc=mean(P.map(function(p){return p.score;}));
+ var L=["["+(g("grade")||"-")+"학년 "+(g("klass")||"-")+"반 "+(g("code")||"-")+"번 "+(g("sname")||"-")+"] 매체 사용 습관 점검 결과"];
+ L.push("· 기록한 주 하루 평균: "+hm(all));
+ L.push("· 실천 기간 하루 평균: "+hm(pa)+(all!==null&&pa!==null?" (변화 "+(pa-all<0?"-":"+")+hm(Math.abs(pa-all))+")":""));
+ L.push("· 목표 지킨 정도: "+(sc===null?"-":Math.round(sc*100)+"%"));
+ if(g("p2").trim())L.push("· 나의 목표: "+g("p2").trim());
+ if(g("r4").trim())L.push("· 알게 된 점: "+g("r4").trim());
+ return L.join("\n");
+}
+
+/* ---------- 교사 제출 ---------- */
+function pad(n){return n<10?"0"+n:""+n;}
+function iso(d){return d?d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()):"";}
+function chk(prefix,list){var o=[];list.forEach(function(x,k){var e=$(prefix+k);if(e&&e.checked)o.push(x);});return o.join(", ");}
+function cmpWord(e,a){if(e===null||a===null)return "";return a>e*1.2?"예상보다 많았다":a<e*0.8?"예상보다 적었다":"비슷했다";}
+function imgOf(key){var d=caps[key];if(!d)return undefined;return {mime:"image/jpeg",data:d.split(",")[1]};}
+function setSent(type,msg,bad){var el=$("sent_"+type);if(!el)return;el.textContent=msg;el.className="sent"+(bad?" bad":"");}
+function nowStr(){var d=new Date();return (d.getMonth()+1)+"/"+d.getDate()+" "+pad(d.getHours())+":"+pad(d.getMinutes());}
+function readImg(file,cb){
+ var fr=new FileReader();
+ fr.onload=function(){var im=new Image();
+  im.onload=function(){var k=Math.min(1,1280/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);cb(c.toDataURL("image/jpeg",0.7));};
+  im.onerror=function(){cb(null);};im.src=fr.result;};
+ fr.onerror=function(){cb(null);};fr.readAsDataURL(file);
+}
+function payload(type){
+ var p={classCode:g("cls").trim(),code:g("code").trim(),grade:g("grade").trim(),klass:g("klass").trim(),name:g("sname").trim(),type:type};
+ if(type==="pre"){p.data={wk:g("expW"),we:g("expE"),media:chk("pm",PM),purp:chk("pp",PP),sleep:g("preSleep"),rate:g("preRate"),tried:g("preTried"),how:g("preHow"),want:g("preWant"),method:g("preMethod")};
+  if(!p.data.wk||!p.data.we)return {error:"평일·주말 예상 시간을 골라요"};}
+ else if(type==="daily"){p.rows=[];var R=recs(),any=false;
+  R.forEach(function(r,i){var has=r.total!==null||r.mood||r.over||r.sleep||r.app;if(!has)return;any=true;
+   p.rows.push({date:iso(r.date),total:r.total,v:r.cats[0],g:r.cats[1],m:r.cats[2],s:r.cats[3],e:r.cats[4],mood:r.mood,over:r.over,sleep:r.sleep,app:r.app,note:g("r"+i+"_note"),img:imgOf("r"+i)});});
+  if(!any)return {error:"제출할 기록이 없어요"};
+  if(p.rows.some(function(r){return !r.date;}))return {error:"기록 시작일을 먼저 입력해요"};}
+ else if(type==="goal"){var R2=recs(),P2=pracs();
+  var wd=mean(R2.filter(function(r){return r.date&&!isWE(r.date);}).map(function(r){return r.total;}));
+  p.data={analysis:[g("a1"),g("a2"),g("a3")].filter(function(x){return x.trim();}).join(" / "),cmp:cmpWord(exp("expW"),wd),fix:g("p1"),goal:g("p2"),hard:g("p3"),ifthen:g("p4"),alt:chk("alt",ALT),help:g("p5"),days:g("p6"),conf:g("p7")};
+  if(!p.data.goal.trim())return {error:"나의 목표를 먼저 써요"};}
+ else if(type==="act"){p.rows=[];var P=pracs();
+  P.forEach(function(r,i){if(!(r.ok||r.t!==null))return;p.rows.push({date:iso(r.date),ok:r.ok,t:r.t,help:g("a"+i+"_h"),hard:g("a"+i+"_d"),change:g("a"+i+"_chg"),img:imgOf("a"+i)});});
+  if(!p.rows.length)return {error:"제출할 실천 기록이 없어요"};
+  if(p.rows.some(function(r){return !r.date;}))return {error:"③ 계획 화면에서 실천 시작일을 입력해요"};}
+ else if(type==="post"){p.data={wk:g("poW"),we:g("poE"),sleep:g("poSleep"),rate:g("poRate"),goalScore:g("poGoal"),helped:g("poHelp"),hard:g("poHard"),learned:g("r4"),next:g("r5")};
+  if(!p.data.wk||!p.data.we)return {error:"평일·주말 사용 시간을 골라요"};}
+ else if(type==="fb"){p.data={speaker:g("fbCode").trim(),good:g("fbGood"),question:g("fbQ"),bring:g("fbBring")};
+  if(!/^\d{1,6}$/.test(p.data.speaker))return {error:"발표한 친구의 번호를 숫자로 써요"};
+  if(!p.data.good.trim()&&!p.data.bring.trim())return {error:"잘한 점이나 가져올 방법을 써요"};}
+ return p;
+}
+var ERR={class_code:"수업 코드가 맞지 않아요. 선생님께 확인해요.",student_code:"번호는 숫자로만 써요.",speaker_code:"친구 번호를 숫자로 써요."};
+function send(type,btn){
+ if(!ENDPOINT){toast("제출 기능이 아직 설정되지 않았어요. 선생님께 알려요.");return;}
+ if(!g("grade").trim()||!g("klass").trim()||!g("sname").trim()){toast("① 화면에서 학년, 반, 이름을 써요");return;}
+ if(!/^\d{1,6}$/.test(g("code").trim())){toast("① 화면에서 번호를 숫자로 입력해요");return;}
+ if(!g("cls").trim()){toast("① 화면에서 수업 코드를 입력해요");return;}
+ var p=payload(type);if(p.error){toast(p.error);setSent(type,p.error,true);return;}
+ btn.disabled=true;setSent(type,"보내는 중…");
+ fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(p)})
+ .then(function(r){return r.json();})
+ .then(function(j){
+  if(j&&j.ok){var m="✔ "+nowStr()+" 제출 완료"+(j.saved>1?" ("+j.saved+"건)":"");S["_sent_"+type]=m;save();setSent(type,m);toast("제출했어요");}
+  else{setSent(type,ERR[j&&j.error]||"제출에 실패했어요. 다시 눌러요.",true);}
+ })
+ .catch(function(){setSent(type,"전송 실패: 인터넷을 확인하고 다시 눌러요. 쓴 내용은 그대로 있어요.",true);})
+ .then(function(){btn.disabled=false;});
+}
+function ping(){
+ var el=$("srv");
+ if(!ENDPOINT){el.innerHTML='<span class="bad">교사 제출 기능이 설정되지 않았어요 (이 도구는 내 기기에서만 쓸 수 있어요)</span>';return;}
+ el.innerHTML="<span>교사 제출 연결 확인 중…</span>";
+ fetch(ENDPOINT).then(function(r){return r.json();}).then(function(j){el.innerHTML=j&&j.ok?'<span class="ok">교사 제출 연결됨 · 각 단계의 [제출] 버튼을 눌러요</span>':'<span class="bad">연결 확인 실패</span>';}).catch(function(){el.innerHTML='<span class="bad">지금은 연결이 안 돼요. 인터넷을 확인해요. (쓴 내용은 기기에 저장돼요)</span>';});
+}
+
+/* ---------- events ---------- */
+function show(n){
+ document.querySelectorAll("section").forEach(function(s){s.classList.toggle("on",s.id==="s"+n);});
+ document.querySelectorAll("#nav button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-go")===String(n));});
+ window.scrollTo(0,0);S._tab=String(n);save();
+}
+document.addEventListener("click",function(e){var t=e.target.closest("[data-go]");if(t)show(t.getAttribute("data-go"));var b=e.target.closest("[data-send]");if(b)send(b.getAttribute("data-send"),b);});
+document.addEventListener("change",function(e){var f=e.target;if(f&&f.getAttribute&&f.getAttribute("data-cap")&&f.files&&f.files[0]){var key=f.getAttribute("data-cap"),sp=$("cp_"+key);sp.textContent="처리 중…";readImg(f.files[0],function(d){if(d){caps[key]=d;sp.textContent="✔ 첨부됨";}else{sp.textContent="📷 선택";toast("사진을 읽을 수 없어요");}});}});
+document.addEventListener("input",function(){collect();render();});
+document.addEventListener("change",function(){collect();render();});
+function init(){
+ build();load();restore();collect();render();show(S._tab||"1");ping();["pre","daily","goal","act","post","fb"].forEach(function(t){if(S["_sent_"+t])setSent(t,S["_sent_"+t]);});
+ $("bPrint").onclick=function(){window.print();};
+ $("bSave").onclick=function(){
+  var blob=new Blob([JSON.stringify(S,null,1)],{type:"application/json"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="내_매체사용_기록"+(g("code")?"_"+g("code"):"")+".json";document.body.appendChild(a);a.click();document.body.removeChild(a);toast("파일로 저장했어요");
+ };
+ $("bLoad").onclick=function(){$("fLoad").click();};
+ $("fLoad").onchange=function(ev){
+  var f=ev.target.files[0];if(!f)return;var rd=new FileReader();
+  rd.onload=function(){try{var o=JSON.parse(rd.result);if(typeof o!=="object"||!o)throw 0;S=o;save();restore();collect();render();toast("불러왔어요");}catch(x){toast("불러올 수 없는 파일이에요");}};
+  rd.readAsText(f);ev.target.value="";
+ };
+ $("bCopy").onclick=function(){
+  var txt=summary(),done=function(){toast("요약을 복사했어요. 붙여넣어 쓰세요");};
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(done,function(){fb(txt,done);});}else fb(txt,done);
+ };
+ function fb(txt,done){var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done();}catch(x){toast("복사에 실패했어요");}document.body.removeChild(ta);}
+ $("bClear").onclick=function(){
+  if(!confirm("지금까지 쓴 내용을 모두 지울까요? 되돌릴 수 없어요."))return;
+  S={};caps={};save();["pre","daily","goal","act","post","fb"].forEach(function(t){setSent(t,"");});document.querySelectorAll("[data-cap]").forEach(function(f){var sp=$("cp_"+f.getAttribute("data-cap"));if(sp)sp.textContent="📷 선택";});document.querySelectorAll("[data-s]").forEach(function(el){if(el.type==="checkbox")el.checked=false;else el.value="";});
+  $("start").value=(function(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());})(new Date());$("p6").value="14일";$("p7").value="3";collect();render();show(1);toast("모두 지웠어요");
+ };
+}
+init();
+})();
+</script>
+</body>
+</html>
